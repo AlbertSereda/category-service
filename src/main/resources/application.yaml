@@ -1,1 +1,21 @@
-spring.application.name=category-service
+spring:
+  application:
+    name: category-service
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: ${CONFIG_SERVICE_DISCOVERY_ID:config-service}
+      name: ${spring.application.name}
+      fail-fast: true
+  config:
+    import: "optional:configserver:"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_URL:http://discovery-service:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true

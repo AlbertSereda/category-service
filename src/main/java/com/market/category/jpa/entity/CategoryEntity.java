@@ -2,15 +2,22 @@ package com.market.category.jpa.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "category")
 @Schema(description = "Category information")
 public class CategoryEntity {
@@ -32,7 +39,11 @@ public class CategoryEntity {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     @Schema(description = "Parent category ID (for hierarchical structure)")
-    private CategoryEntity parent;
+    private CategoryEntity parentCategory;
+
+    @OneToMany(mappedBy = "parentCategory")
+    @Schema(description = "Nested categories")
+    private List<CategoryEntity> nestedCategories;
 
     @Column(name = "creation_date", nullable = false, updatable = false)
     @CreationTimestamp

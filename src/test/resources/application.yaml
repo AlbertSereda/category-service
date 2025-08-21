@@ -1,0 +1,17 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://postgresdb:5432/category_service_db
+    username: category_service
+    password: category_service
+    hikari:
+      max-lifetime: 30000
+      connection-timeout: 10000
+  liquibase:
+    change-log: classpath:db/changelog/liquibase-master.yaml
+    enabled: true
+  kafka:
+    topics:
+      category-changed: category_changed
+      category-attribute-changed: category_attribute_changed

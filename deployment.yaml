@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: category-service-config
+data:
+  application.yaml: |
+    spring:
+      application:
+        name: category-service
+      datasource:
+        url: jdbc:postgresql://${PG_DB_HOST:postgresdb}:${PG_DB_PORT:5432}/${POSTGRES_DB_CATEGORY_SERVICE:category_service_db}
+        username: ${PG_DB_USERNAME_CATEGORY_SERVICE:category_service}
+        password: ${PG_DB_PASS_CATEGORY_SERVICE:category_service}
+        driver-class-name: org.postgresql.Driver
+      liquibase:
+        change-log: classpath:db/changelog/liquibase-master.yaml
+        enabled: true
+      jpa:
+        hibernate:
+          ddl-auto: none
+        show-sql: false
+        open-in-view: false
+      security:
+        oauth2:
+          client:
+            registration:
+              all-in-market:
+                client-id: ${OAUTH2_CLIENT_ID:clientId}
+                client-secret: ${OAUTH2_CLIENT_SECRET:secret}
+                authorization-grant-type: ${OAUTH2_CLIENT_GRANT_TYPE:client_credentials}
+                client-authentication-method: ${OAUTH2_CLIENT_AUTH_METHOD:client_secret_basic}
+            provider:
+              all-in-market:
+                token-uri: ${OAUTH2_CLIENT_TOKEN_URI:http://localhost:7070/oauth2/token}
+      kafka:
+        bootstrap-servers: kafka:9092
+        topics:
+          category-changed: ${KAFKA_TOPIC_CATEGORY_CHANGED:category_changed}
+          category-attribute-changed: ${KAFKA_TOPIC_CATEGORY_ATTRIBUTE_CHANGED:category_attribute_changed}
+          registration-success: ${KAFKA_TOPIC_REGISTRATION_SUCCESS:registration_success}
+          status-order-changed: ${KAFKA_TOPIC_STATUS_ORDER_CHANGED:status_order_changed}
+          status-payment-changed: ${KAFKA_TOPIC_STATUS_PAYMENT_CHANGED:status_payment_changed}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: category-service
+  labels:
+    app: category-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: category-service
+  template:
+    metadata:
+      name: category-service
+      labels:
+        app: category-service
+    spec:
+      containers:
+        - name: category-service
+          image: albertsereda/all-in-market-category-service
+          imagePullPolicy: Always
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: file:/config/
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /config
+              name: category-service-config
+      volumes:
+        - name: category-service-config
+          configMap:
+            name: category-service-config
+      restartPolicy: Always

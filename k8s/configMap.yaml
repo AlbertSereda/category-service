@@ -2,13 +2,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: category-service-config
+  namespace: all-in-market
 data:
   application.yaml: |
     spring:
       application:
         name: category-service
       datasource:
-        url: jdbc:postgresql://${PG_DB_HOST:postgresdb}:${PG_DB_PORT:5432}/${POSTGRES_DB_CATEGORY_SERVICE:category_service_db}
+        url: jdbc:postgresql://${PG_DB_HOST:postgresdb.default.svc.cluster.local}:${PG_DB_PORT:5432}/${POSTGRES_DB_CATEGORY_SERVICE:category_service_db}
         username: ${PG_DB_USERNAME_CATEGORY_SERVICE:category_service}
         password: ${PG_DB_PASS_CATEGORY_SERVICE:category_service}
         driver-class-name: org.postgresql.Driver
@@ -40,39 +41,12 @@ data:
           registration-success: ${KAFKA_TOPIC_REGISTRATION_SUCCESS:registration_success}
           status-order-changed: ${KAFKA_TOPIC_STATUS_ORDER_CHANGED:status_order_changed}
           status-payment-changed: ${KAFKA_TOPIC_STATUS_PAYMENT_CHANGED:status_payment_changed}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: category-service
-  labels:
-    app: category-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: category-service
-  template:
-    metadata:
-      name: category-service
-      labels:
-        app: category-service
-    spec:
-      containers:
-        - name: category-service
-          image: albertsereda/all-in-market-category-service
-          imagePullPolicy: Always
-          env:
-            - name: SPRING_CONFIG_IMPORT
-              value: file:/config/
-          ports:
-            - containerPort: 8080
-              protocol: TCP
-          volumeMounts:
-            - mountPath: /config
-              name: category-service-config
-      volumes:
-        - name: category-service-config
-          configMap:
-            name: category-service-config
-      restartPolicy: Always
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health, info, prometheus
+      metrics:
+        tags:
+          application: ${spring.application.name}

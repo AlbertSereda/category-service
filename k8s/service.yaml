@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: category-service
+  namespace: all-in-market
 spec:
   selector:
     app: category-service
